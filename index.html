@@ -1,0 +1,214 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Digital Music Store - Morelia</title>
+  <style>
+    :root {
+      --primary: #0047AB;
+      --secondary: #00FFFF;
+      --bg: #F4F7FA;
+      --card-bg: #FFFFFF;
+      --text: #1E293B;
+      --whatsapp: #25D366;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
+    body { background-color: var(--bg); color: var(--text); padding-bottom: 40px; }
+
+    header {
+      background: linear-gradient(135deg, #001F54, var(--primary));
+      color: white;
+      text-align: center;
+      padding: 20px 15px;
+      box-shadow: 0 4px 10px rgba(0,0,0,0.15);
+    }
+
+    header h1 { font-size: 1.5rem; letter-spacing: 1px; color: #FFF; }
+    header p { font-size: 0.85rem; color: var(--secondary); margin-top: 5px; }
+
+    .search-container {
+      max-width: 600px;
+      margin: 20px auto;
+      padding: 0 15px;
+      display: flex;
+      gap: 10px;
+    }
+
+    input[type="text"] {
+      flex: 1;
+      padding: 12px 15px;
+      border: 2px solid #CBD5E1;
+      border-radius: 8px;
+      font-size: 1rem;
+      outline: none;
+    }
+
+    input[type="text"]:focus { border-color: var(--primary); }
+
+    button.btn-search {
+      background-color: var(--primary);
+      color: white;
+      border: none;
+      padding: 12px 20px;
+      border-radius: 8px;
+      font-weight: bold;
+      cursor: pointer;
+    }
+
+    .catalog {
+      max-width: 1000px;
+      margin: 0 auto;
+      padding: 10px 15px;
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+      gap: 20px;
+    }
+
+    .card {
+      background: var(--card-bg);
+      border-radius: 12px;
+      padding: 15px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+    }
+
+    .card img {
+      width: 100%;
+      height: 180px;
+      object-fit: contain;
+      border-radius: 8px;
+    }
+
+    .card-title {
+      font-size: 0.95rem;
+      font-weight: 600;
+      margin: 10px 0;
+      line-height: 1.3;
+      height: 2.6em;
+      overflow: hidden;
+    }
+
+    .badge {
+      display: inline-block;
+      background: #E0F2FE;
+      color: #0369A1;
+      font-size: 0.75rem;
+      font-weight: 600;
+      padding: 4px 8px;
+      border-radius: 6px;
+      margin-bottom: 8px;
+    }
+
+    .price {
+      font-size: 1.25rem;
+      color: var(--primary);
+      font-weight: bold;
+      margin-bottom: 12px;
+    }
+
+    .btn-ws {
+      background-color: var(--whatsapp);
+      color: white;
+      text-decoration: none;
+      text-align: center;
+      padding: 10px;
+      border-radius: 8px;
+      font-weight: bold;
+      font-size: 0.9rem;
+      display: block;
+    }
+
+    .loading {
+      text-align: center;
+      grid-column: 1 / -1;
+      padding: 40px;
+      font-size: 1.1rem;
+      color: #64748B;
+    }
+  </style>
+</head>
+<body>
+
+  <header>
+    <h1>DIGITAL MUSIC STORE</h1>
+    <p>📍 Tu tienda de música en Morelia | Disponible Sobre Pedido</p>
+  </header>
+
+  <div class="search-container">
+    <input type="text" id="searchInput" placeholder="Buscar guitarras, cuerdas, pedales..." value="guitarra">
+    <button class="btn-search" onclick="buscar()">Buscar</button>
+  </div>
+
+  <main class="catalog" id="catalog">
+    <div class="loading">Cargando catálogo para Morelia...</div>
+  </main>
+
+  <script>
+    // ⚠️ REEMPLAZA ESTE NÚMERO POR TU NÚMERO DE WHATSAPP A 10 DÍGITOS
+    const MI_WHATSAPP = "524434183209"; 
+
+    // Regla de Margen Dinámico
+    function calcularPrecioTienda(precioML) {
+      let precioFinal = 0;
+      if (precioML <= 400) precioFinal = precioML + 80;
+      else if (precioML <= 1500) precioFinal = (precioML * 1.15) + 50;
+      else if (precioML <= 5000) precioFinal = precioML * 1.12;
+      else precioFinal = precioML * 1.10;
+      return Math.ceil(precioFinal);
+    }
+
+    async function cargarProductos(busqueda) {
+      const container = document.getElementById('catalog');
+      container.innerHTML = '<div class="loading">Buscando productos disponibles...</div>';
+
+      try {
+        const res = await fetch(`https://api.mercadolibre.com/sites/MLM/search?category=MLM1182&q=${encodeURIComponent(busqueda)}&limit=16`);
+        const data = await res.json();
+
+        container.innerHTML = '';
+
+        if (!data.results || data.results.length === 0) {
+          container.innerHTML = '<div class="loading">No encontramos productos con ese nombre. Intenta otra búsqueda.</div>';
+          return;
+        }
+
+        data.results.forEach(item => {
+          const precioFinal = calcularPrecioTienda(item.price);
+          const foto = item.thumbnail.replace('I.jpg', 'O.jpg'); // Calidad HD
+
+          const msg = `¡Hola! Me interesa solicitar sobre pedido este producto:\n\n📌 *${item.title}*\n💰 *Precio con entrega a domicilio en Morelia:* $${precioFinal} MXN\n📦 *Estado:* Nuevo y sellado de fábrica.\n\n¿Me apoyas para coordinar la entrega?`;
+          const linkWA = `https://wa.me/${MI_WHATSAPP}?text=${encodeURIComponent(msg)}`;
+
+          const card = document.createElement('div');
+          card.className = 'card';
+          card.innerHTML = `
+            <div>
+              <img src="${foto}" alt="${item.title}">
+              <div class="card-title">${item.title}</div>
+              <span class="badge">📦 Sobre pedido (2-4 días)</span>
+              <div class="price">$${precioFinal.toLocaleString('es-MX')} MXN</div>
+            </div>
+            <a href="${linkWA}" target="_blank" class="btn-ws">Pedir para entrega en Morelia</a>
+          `;
+          container.appendChild(card);
+        });
+
+      } catch (err) {
+        container.innerHTML = '<div class="loading">Ocurrió un error al cargar el catálogo. Por favor intenta más tarde.</div>';
+      }
+    }
+
+    function buscar() {
+      const query = document.getElementById('searchInput').value;
+      if (query.trim() !== '') cargarProductos(query);
+    }
+
+    // Cargar inicial
+    cargarProductos('guitarra');
+  </script>
+</body>
+</html>
